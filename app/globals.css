@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --tango-black: #080808;
+  --tango-charcoal: #181818;
+  --tango-panel: #111111;
+  --tango-yellow: #F5C100;
+  --tango-yellow-hi: #FFD000;
+  --tango-red: #D42B2B;
+  --tango-white: #FFFFFF;
+  --tango-grey: #2A2A2A;
+  --tango-border: #2A2A2A;
+  --tango-muted: #888888;
+}
+
+html, body {
+  background: var(--tango-black);
+  color: var(--tango-white);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  border-color: var(--tango-border);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--tango-black); }
+::-webkit-scrollbar-thumb { background: var(--tango-border); }
+::-webkit-scrollbar-thumb:hover { background: var(--tango-muted); }
+
+/* Selection */
+::selection { background: var(--tango-yellow); color: var(--tango-black); }
+
+/* Tango utilities */
+.tg-mono { font-family: var(--font-space-mono), ui-monospace, monospace; }
+.tg-display { font-family: var(--font-nunito), system-ui, sans-serif; font-weight: 900; }
+
+.tg-eyebrow {
+  font-family: var(--font-space-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--tango-muted);
+}
+
+.tg-card-line {
+  position: relative;
+}
+.tg-card-line::before {
+  content: '';
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 2px;
+  background: var(--tango-yellow);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform 0.3s ease;
+}
+.tg-card-line.danger::before { background: var(--tango-red); }
+.tg-card-line:hover::before { transform: scaleX(1); }
+
+@keyframes tg-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.tg-pulse { animation: tg-pulse 1.6s ease-in-out infinite; }
