@@ -9,19 +9,21 @@ import { Input } from "@/components/ui/input";
 import { useT } from "@/lib/i18n";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 
+type Mode = "login" | "signup" | "reset";
+
 export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
   const t = useT();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [mode, setMode] = useState<"login" | "signup">("login");
-  const [error, setError] = useState<string | null>(null);
+  const [mode, setMode] = useState<Mode>("login");
+  const [message, setMessage] = useState<{ kind: "error" | "info"; text: string } | null>(null);
   const [loading, setLoading] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setMessage(null);
     setLoading(true);
     try {
       if (mode === "login") {
@@ -29,14 +31,25 @@ export default function LoginPage() {
         if (error) throw error;
         router.push("/dashboard");
         router.refresh();
-      } else {
+      } else if (mode === "signup") {
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
-        setError(t("login.signup_confirm"));
+        setMessage({ kind: "info", text: t("login.signup_confirm") });
         setMode("login");
+      } else {
+        // reset
+        const redirectTo =
+          typeof window !== "undefined"
+            ? `${window.location.origin}/reset-password`
+            : undefined;
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo,
+        });
+        if (error) throw error;
+        setMessage({ kind: "info", text: t("login.reset_sent") });
       }
     } catch (e: any) {
-      setError(e.message ?? t("login.error_generic"));
+      setMessage({ kind: "error", text: e.message ?? t("login.error_generic") });
     } finally {
       setLoading(false);
     }
@@ -97,23 +110,40 @@ export default function LoginPage() {
         <div className="px-8 lg:px-16 py-12 lg:py-20 flex flex-col justify-center bg-tango-charcoal">
           <div className="max-w-sm w-full">
             <p className="tg-mono text-[10px] uppercase tracking-widest3 text-tango-yellow mb-6">
-              {mode === "login" ? t("login.eyebrow_login") : t("login.eyebrow_signup")}
+              {mode === "login"
+                ? t("login.eyebrow_login")
+                : mode === "signup"
+                ? t("login.eyebrow_signup")
+                : t("login.eyebrow_reset")}
             </p>
-            <h2 className="tg-display text-3xl mb-8 leading-tight">
+            <h2 className="tg-display text-3xl mb-2 leading-tight">
               {mode === "login" ? (
                 <>
                   {t("login.title_login_a")}
                   <br />
                   <span className="text-tango-yellow">{t("login.title_login_b")}</span>
                 </>
-              ) : (
+              ) : mode === "signup" ? (
                 <>
                   {t("login.title_signup_a")}
                   <br />
                   <span className="text-tango-yellow">{t("login.title_signup_b")}</span>
                 </>
+              ) : (
+                <>
+                  {t("login.title_reset_a")}
+                  <br />
+                  <span className="text-tango-yellow">{t("login.title_reset_b")}</span>
+                </>
               )}
             </h2>
+
+            {mode === "reset" && (
+              <p className="text-tango-muted text-sm leading-relaxed mb-6">
+                {t("login.reset_subtitle")}
+              </p>
+            )}
+            {mode !== "reset" && <div className="mb-6" />}
 
             <form onSubmit={submit} className="space-y-5">
               <div>
@@ -130,48 +160,93 @@ export default function LoginPage() {
                 />
               </div>
 
-              <div>
-                <label className="block tg-mono text-[9px] uppercase tracking-widest text-tango-muted mb-2">
-                  {t("login.password_label")}
-                </label>
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={t("login.password_placeholder")}
-                  required
-                  autoComplete={mode === "login" ? "current-password" : "new-password"}
-                  minLength={6}
-                />
-              </div>
+              {mode !== "reset" && (
+                <div>
+                  <label className="block tg-mono text-[9px] uppercase tracking-widest text-tango-muted mb-2">
+                    {t("login.password_label")}
+                  </label>
+                  <Input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder={t("login.password_placeholder")}
+                    required
+                    autoComplete={mode === "login" ? "current-password" : "new-password"}
+                    minLength={6}
+                  />
+                </div>
+              )}
 
-              {error && (
-                <div className="tg-mono text-[10px] uppercase tracking-wider border border-tango-red text-tango-red px-3 py-2">
-                  {error}
+              {message && (
+                <div
+                  className={`tg-mono text-[10px] uppercase tracking-wider px-3 py-2 border ${
+                    message.kind === "error"
+                      ? "border-tango-red text-tango-red"
+                      : "border-tango-yellow text-tango-yellow"
+                  }`}
+                >
+                  {message.text}
                 </div>
               )}
 
               <Button type="submit" disabled={loading} variant="primary" size="lg" className="w-full">
-                {loading ? "..." : mode === "login" ? t("login.submit_login") : t("login.submit_signup")}
+                {loading
+                  ? "..."
+                  : mode === "login"
+                  ? t("login.submit_login")
+                  : mode === "signup"
+                  ? t("login.submit_signup")
+                  : t("login.submit_reset")}
               </Button>
             </form>
 
-            <button
-              onClick={() => setMode(mode === "login" ? "signup" : "login")}
-              className="w-full mt-6 tg-mono text-[10px] uppercase tracking-widest text-tango-muted hover:text-tango-white transition-colors"
-            >
-              {mode === "login" ? (
-                <>
-                  {t("login.toggle_to_signup_a")}{" "}
-                  <span className="text-tango-yellow">{t("login.toggle_to_signup_b")}</span>
-                </>
-              ) : (
-                <>
-                  {t("login.toggle_to_login_a")}{" "}
-                  <span className="text-tango-yellow">{t("login.toggle_to_login_b")}</span>
-                </>
+            <div className="mt-5 space-y-2">
+              {mode === "login" && (
+                <button
+                  onClick={() => {
+                    setMode("reset");
+                    setMessage(null);
+                  }}
+                  className="w-full tg-mono text-[10px] uppercase tracking-widest text-tango-muted hover:text-tango-yellow transition-colors"
+                >
+                  {t("login.forgot")}
+                </button>
               )}
-            </button>
+
+              {mode === "reset" && (
+                <button
+                  onClick={() => {
+                    setMode("login");
+                    setMessage(null);
+                  }}
+                  className="w-full tg-mono text-[10px] uppercase tracking-widest text-tango-muted hover:text-tango-white transition-colors"
+                >
+                  {t("login.back_to_login")}
+                </button>
+              )}
+
+              {(mode === "login" || mode === "signup") && (
+                <button
+                  onClick={() => {
+                    setMode(mode === "login" ? "signup" : "login");
+                    setMessage(null);
+                  }}
+                  className="w-full tg-mono text-[10px] uppercase tracking-widest text-tango-muted hover:text-tango-white transition-colors"
+                >
+                  {mode === "login" ? (
+                    <>
+                      {t("login.toggle_to_signup_a")}{" "}
+                      <span className="text-tango-yellow">{t("login.toggle_to_signup_b")}</span>
+                    </>
+                  ) : (
+                    <>
+                      {t("login.toggle_to_login_a")}{" "}
+                      <span className="text-tango-yellow">{t("login.toggle_to_login_b")}</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>

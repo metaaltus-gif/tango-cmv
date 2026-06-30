@@ -13,7 +13,6 @@ type Dict = Record<string, string>;
 export const translations: Record<Locale, Dict> = {
   // ===================== ENGLISH =====================
   en: {
-    // common
     "common.save": "SAVE",
     "common.cancel": "CANCEL",
     "common.edit": "EDIT",
@@ -32,13 +31,11 @@ export const translations: Record<Locale, Dict> = {
     "common.actions": "ACTIONS",
     "common.status": "STATUS",
 
-    // nav
     "nav.dashboard": "DASHBOARD",
     "nav.rules": "RULES",
     "nav.history": "HISTORY",
     "nav.sync_ok": "SYNC OK",
 
-    // modules
     "modules.cmv": "CMV",
     "modules.shifter": "SHIFTER",
     "modules.finance": "FINANCE",
@@ -47,11 +44,11 @@ export const translations: Record<Locale, Dict> = {
     "modules.connect": "CONNECT",
     "modules.active": "ACTIVE",
 
-    // login
     "login.tagline": "OPERATING SYSTEM · RESTAURANTS",
     "login.eyebrow_welcome": "WELCOME BACK",
     "login.eyebrow_signup": "CREATE ACCOUNT",
     "login.eyebrow_login": "SIGN IN TO SYSTEM",
+    "login.eyebrow_reset": "RESET PASSWORD",
     "login.hero_l1": "Management",
     "login.hero_l2": "that doesn't",
     "login.hero_l3": "stop at",
@@ -64,25 +61,46 @@ export const translations: Record<Locale, Dict> = {
     "login.title_login_b": "back.",
     "login.title_signup_a": "Let's",
     "login.title_signup_b": "begin.",
+    "login.title_reset_a": "Forgot",
+    "login.title_reset_b": "password?",
     "login.email_label": "EMAIL",
     "login.email_placeholder": "you@email.com",
     "login.password_label": "PASSWORD",
     "login.password_placeholder": "••••••••",
     "login.submit_login": "SIGN IN →",
     "login.submit_signup": "CREATE ACCOUNT →",
+    "login.submit_reset": "SEND RESET LINK →",
     "login.toggle_to_signup_a": "No account yet?",
     "login.toggle_to_signup_b": "SIGN UP",
     "login.toggle_to_login_a": "Already have an account?",
     "login.toggle_to_login_b": "SIGN IN",
+    "login.forgot": "FORGOT PASSWORD?",
+    "login.back_to_login": "← BACK TO SIGN IN",
+    "login.reset_subtitle":
+      "We'll send a link to your email so you can pick a new password.",
+    "login.reset_sent":
+      "Check your email — we sent you a reset link. It expires in 1 hour.",
     "login.error_generic": "Authentication error",
-    "login.signup_confirm":
-      "Account created. Check your email to confirm.",
+    "login.signup_confirm": "Account created. Check your email to confirm.",
     "login.module_cost": "COST",
     "login.module_schedule": "SCHEDULE",
     "login.module_finances": "FINANCES",
     "login.module_people": "PEOPLE",
 
-    // dashboard
+    "reset.eyebrow": "NEW PASSWORD",
+    "reset.title_a": "Set your",
+    "reset.title_b": "new password.",
+    "reset.subtitle":
+      "Pick a strong password. Minimum 6 characters.",
+    "reset.new_label": "NEW PASSWORD",
+    "reset.confirm_label": "CONFIRM PASSWORD",
+    "reset.submit": "UPDATE PASSWORD →",
+    "reset.success": "Password updated. Redirecting…",
+    "reset.error_mismatch": "Passwords do not match",
+    "reset.error_short": "Password must be at least 6 characters",
+    "reset.error_session": "Reset link is invalid or expired. Request a new one.",
+    "reset.back_to_login": "← BACK TO SIGN IN",
+
     "dash.eyebrow": "CMV · WEEK",
     "dash.hero_label": "WEEK TOTAL",
     "dash.eq_meta": "GOAL",
@@ -115,7 +133,6 @@ export const translations: Record<Locale, Dict> = {
     "dash.suppliers_subtotal": "of total",
     "dash.empty_week": "NO DATA THIS WEEK",
 
-    // rules
     "rules.eyebrow": "RULES · SETUP",
     "rules.title_a": "Rule",
     "rules.title_b": "configuration",
@@ -147,7 +164,6 @@ export const translations: Record<Locale, Dict> = {
     "rules.required_supplier": "Supplier name is required",
     "rules.confirm_remove": "Remove this rule?",
 
-    // history
     "history.eyebrow": "HISTORY · ALL WEEKS",
     "history.title": "weeks processed",
     "history.subtitle":
@@ -171,7 +187,6 @@ export const translations: Record<Locale, Dict> = {
       "SNAPSHOT OF THE WEEK TAB · READY TO PRINT",
     "history.coming_soon": "Coming soon",
 
-    // status bar
     "status.system_active": "System active",
     "status.cmv_within": "CMV: within goal",
     "status.cmv_over": "CMV: over goal",
@@ -215,6 +230,7 @@ export const translations: Record<Locale, Dict> = {
     "login.eyebrow_welcome": "BEM-VINDA DE VOLTA",
     "login.eyebrow_signup": "CRIAR CONTA",
     "login.eyebrow_login": "ENTRAR NO SISTEMA",
+    "login.eyebrow_reset": "RECUPERAR SENHA",
     "login.hero_l1": "Gestão",
     "login.hero_l2": "que não",
     "login.hero_l3": "para na",
@@ -227,22 +243,45 @@ export const translations: Record<Locale, Dict> = {
     "login.title_login_b": "de volta.",
     "login.title_signup_a": "Vamos",
     "login.title_signup_b": "começar.",
+    "login.title_reset_a": "Esqueceu",
+    "login.title_reset_b": "a senha?",
     "login.email_label": "EMAIL",
     "login.email_placeholder": "voce@email.com",
     "login.password_label": "SENHA",
     "login.password_placeholder": "••••••••",
     "login.submit_login": "ENTRAR →",
     "login.submit_signup": "CRIAR CONTA →",
+    "login.submit_reset": "ENVIAR LINK →",
     "login.toggle_to_signup_a": "Ainda não tem conta?",
     "login.toggle_to_signup_b": "CADASTRAR",
     "login.toggle_to_login_a": "Já tem conta?",
     "login.toggle_to_login_b": "ENTRAR",
+    "login.forgot": "ESQUECEU A SENHA?",
+    "login.back_to_login": "← VOLTAR PRA ENTRAR",
+    "login.reset_subtitle":
+      "Vamos te enviar um link no email pra você criar uma senha nova.",
+    "login.reset_sent":
+      "Confere seu email — enviamos o link de recuperação. Vale por 1 hora.",
     "login.error_generic": "Erro ao autenticar",
     "login.signup_confirm": "Conta criada. Confira seu email pra confirmar.",
     "login.module_cost": "CUSTO",
     "login.module_schedule": "ESCALA",
     "login.module_finances": "FINANÇAS",
     "login.module_people": "PESSOAS",
+
+    "reset.eyebrow": "NOVA SENHA",
+    "reset.title_a": "Define sua",
+    "reset.title_b": "nova senha.",
+    "reset.subtitle": "Escolhe uma senha forte. Mínimo 6 caracteres.",
+    "reset.new_label": "NOVA SENHA",
+    "reset.confirm_label": "CONFIRMAR SENHA",
+    "reset.submit": "ATUALIZAR SENHA →",
+    "reset.success": "Senha atualizada. Redirecionando…",
+    "reset.error_mismatch": "As senhas não conferem",
+    "reset.error_short": "A senha precisa ter no mínimo 6 caracteres",
+    "reset.error_session":
+      "Link inválido ou expirado. Pede um novo link de recuperação.",
+    "reset.back_to_login": "← VOLTAR PRA ENTRAR",
 
     "dash.eyebrow": "CMV · SEMANA",
     "dash.hero_label": "TOTAL DA SEMANA",
@@ -373,6 +412,7 @@ export const translations: Record<Locale, Dict> = {
     "login.eyebrow_welcome": "BIENVENIDA DE NUEVO",
     "login.eyebrow_signup": "CREAR CUENTA",
     "login.eyebrow_login": "INICIAR SESIÓN",
+    "login.eyebrow_reset": "RECUPERAR CONTRASEÑA",
     "login.hero_l1": "Gestión",
     "login.hero_l2": "que no",
     "login.hero_l3": "para en",
@@ -385,16 +425,25 @@ export const translations: Record<Locale, Dict> = {
     "login.title_login_b": "de nuevo.",
     "login.title_signup_a": "Vamos a",
     "login.title_signup_b": "empezar.",
+    "login.title_reset_a": "¿Olvidaste",
+    "login.title_reset_b": "tu contraseña?",
     "login.email_label": "CORREO",
     "login.email_placeholder": "tu@correo.com",
     "login.password_label": "CONTRASEÑA",
     "login.password_placeholder": "••••••••",
     "login.submit_login": "INICIAR SESIÓN →",
     "login.submit_signup": "CREAR CUENTA →",
+    "login.submit_reset": "ENVIAR ENLACE →",
     "login.toggle_to_signup_a": "¿Aún no tienes cuenta?",
     "login.toggle_to_signup_b": "REGISTRARSE",
     "login.toggle_to_login_a": "¿Ya tienes cuenta?",
     "login.toggle_to_login_b": "INICIAR SESIÓN",
+    "login.forgot": "¿OLVIDASTE LA CONTRASEÑA?",
+    "login.back_to_login": "← VOLVER AL INICIO",
+    "login.reset_subtitle":
+      "Te enviaremos un enlace a tu correo para elegir una nueva contraseña.",
+    "login.reset_sent":
+      "Revisa tu correo — te enviamos el enlace de recuperación. Expira en 1 hora.",
     "login.error_generic": "Error de autenticación",
     "login.signup_confirm":
       "Cuenta creada. Revisa tu correo para confirmar.",
@@ -402,6 +451,21 @@ export const translations: Record<Locale, Dict> = {
     "login.module_schedule": "TURNOS",
     "login.module_finances": "FINANZAS",
     "login.module_people": "EQUIPO",
+
+    "reset.eyebrow": "NUEVA CONTRASEÑA",
+    "reset.title_a": "Define tu",
+    "reset.title_b": "nueva contraseña.",
+    "reset.subtitle":
+      "Elige una contraseña fuerte. Mínimo 6 caracteres.",
+    "reset.new_label": "NUEVA CONTRASEÑA",
+    "reset.confirm_label": "CONFIRMAR CONTRASEÑA",
+    "reset.submit": "ACTUALIZAR CONTRASEÑA →",
+    "reset.success": "Contraseña actualizada. Redirigiendo…",
+    "reset.error_mismatch": "Las contraseñas no coinciden",
+    "reset.error_short": "La contraseña debe tener al menos 6 caracteres",
+    "reset.error_session":
+      "Enlace inválido o expirado. Solicita un nuevo enlace de recuperación.",
+    "reset.back_to_login": "← VOLVER AL INICIO",
 
     "dash.eyebrow": "CMV · SEMANA",
     "dash.hero_label": "TOTAL DE LA SEMANA",
