@@ -22,7 +22,24 @@ const SECTIONS = [
   { key: "nav.history", href: "/historico" },
 ];
 
-export function Nav({ userEmail }: { userEmail?: string }) {
+function initialFor(name?: string | null, email?: string | null) {
+  if (name) {
+    const parts = name.trim().split(/\s+/);
+    return (parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "");
+  }
+  if (email) return email[0]?.toUpperCase() ?? "?";
+  return "?";
+}
+
+export function Nav({
+  userEmail,
+  userName,
+  userRole,
+}: {
+  userEmail?: string;
+  userName?: string | null;
+  userRole?: string | null;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
@@ -33,6 +50,9 @@ export function Nav({ userEmail }: { userEmail?: string }) {
     router.push("/login");
     router.refresh();
   };
+
+  const displayName = userName || userEmail?.split("@")[0] || "?";
+  const initials = initialFor(userName, userEmail).toUpperCase();
 
   return (
     <nav className="border-b border-tango-border bg-tango-black sticky top-0 z-20">
@@ -107,26 +127,52 @@ export function Nav({ userEmail }: { userEmail?: string }) {
 
           <LocaleSwitcher />
 
-          <button
-            onClick={logout}
-            className="tg-mono text-[10px] uppercase tracking-widest font-bold text-tango-muted hover:text-tango-white transition-colors"
-            title={userEmail}
-          >
-            {t("common.logout")}
-          </button>
+          {/* User chip */}
+          <div className="flex items-center gap-2.5 pl-4 border-l border-tango-border">
+            <div className="w-8 h-8 bg-tango-yellow text-tango-black flex items-center justify-center tg-display text-[13px] font-black">
+              {initials}
+            </div>
+            <div className="hidden sm:flex flex-col leading-tight">
+              <span className="text-tango-white text-[13px] font-bold tracking-tight">
+                {displayName}
+              </span>
+              {userRole && (
+                <span className="tg-mono text-[8.5px] uppercase tracking-widest text-tango-muted">
+                  {userRole} · {userEmail}
+                </span>
+              )}
+              {!userRole && userEmail && (
+                <span className="tg-mono text-[8.5px] uppercase tracking-widest text-tango-muted">
+                  {userEmail}
+                </span>
+              )}
+            </div>
+            <button
+              onClick={logout}
+              className="tg-mono text-[10px] uppercase tracking-widest font-bold text-tango-muted hover:text-tango-red transition-colors ml-2"
+            >
+              {t("common.logout")}
+            </button>
+          </div>
         </div>
       </div>
     </nav>
   );
 }
 
-export function StatusBar() {
+export function StatusBar({ userName }: { userName?: string | null }) {
   const t = useT();
   return (
     <footer className="border-t border-tango-border bg-tango-black px-6 lg:px-8 py-3 flex gap-6 items-center flex-wrap">
       <StatusItem dot="green" label={t("status.system_active")} />
       <StatusItem dot="yellow" label={t("status.cmv_within")} />
       <StatusItem dot="grey" label={t("status.modules")} />
+      {userName && (
+        <StatusItem
+          dot="yellow"
+          label={`SESSION · ${userName.toUpperCase()}`}
+        />
+      )}
     </footer>
   );
 }
