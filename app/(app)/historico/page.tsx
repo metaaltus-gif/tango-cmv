@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { formatUSD, getWeekStart, isoDate } from "@/lib/utils";
 
@@ -66,7 +67,7 @@ export default async function HistoricoPage() {
           {weeks.length} <span className="text-tango-yellow">semanas</span> processadas
         </h1>
         <p className="text-tango-muted text-sm">
-          Lista cronológica de toda a operação. Status indica posição vs. meta de ${META.toLocaleString()}.
+          Clique numa linha pra ver detalhes, notas e downloads da semana.
         </p>
       </div>
 
@@ -82,12 +83,13 @@ export default async function HistoricoPage() {
                 <Th className="text-right">$/LB</Th>
                 <Th className="text-right">NOTAS</Th>
                 <Th className="text-center">STATUS</Th>
+                <Th className="text-right">→</Th>
               </tr>
             </thead>
             <tbody>
               {weeks.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="text-center py-12 tg-mono text-[11px] uppercase tracking-widest text-tango-muted">
+                  <td colSpan={8} className="text-center py-12 tg-mono text-[11px] uppercase tracking-widest text-tango-muted">
                     SEM DADOS
                   </td>
                 </tr>
@@ -98,30 +100,33 @@ export default async function HistoricoPage() {
                 return (
                   <tr
                     key={w.weekStart}
-                    className="border-b border-tango-border/40 hover:bg-tango-panel transition-colors"
+                    className="border-b border-tango-border/40 hover:bg-tango-panel transition-colors cursor-pointer group"
                   >
                     <Td>
-                      <div className="flex items-center gap-3">
+                      <Link
+                        href={`/historico/${w.weekStart}`}
+                        className="flex items-center gap-3 -m-3 p-3"
+                      >
                         <span className="tg-mono text-[10px] text-tango-yellow">
                           {String(weeks.length - idx).padStart(2, "0")}
                         </span>
-                        <span className="tg-display uppercase tracking-wider text-sm">
+                        <span className="tg-display uppercase tracking-wider text-sm group-hover:text-tango-yellow transition-colors">
                           {w.weekStart}
                         </span>
-                      </div>
+                      </Link>
                     </Td>
-                    <Td className="text-right tg-mono text-sm font-bold">{formatUSD(w.cmv)}</Td>
-                    <Td className="text-right tg-mono text-sm text-tango-muted">
+                    <TdLink week={w.weekStart} className="text-right tg-mono text-sm font-bold">{formatUSD(w.cmv)}</TdLink>
+                    <TdLink week={w.weekStart} className="text-right tg-mono text-sm text-tango-muted">
                       {formatUSD(w.nonCmv)}
-                    </Td>
-                    <Td className="text-right tg-mono text-sm">
+                    </TdLink>
+                    <TdLink week={w.weekStart} className="text-right tg-mono text-sm">
                       {w.salmonLbs > 0 ? w.salmonLbs.toFixed(2) : "—"}
-                    </Td>
-                    <Td className="text-right tg-mono text-sm">
+                    </TdLink>
+                    <TdLink week={w.weekStart} className="text-right tg-mono text-sm">
                       {pricePerLb > 0 ? `$${pricePerLb.toFixed(2)}` : "—"}
-                    </Td>
-                    <Td className="text-right tg-mono text-sm">{w.invoices.size}</Td>
-                    <Td className="text-center">
+                    </TdLink>
+                    <TdLink week={w.weekStart} className="text-right tg-mono text-sm">{w.invoices.size}</TdLink>
+                    <TdLink week={w.weekStart} className="text-center">
                       <span
                         className={`tg-mono text-[9px] uppercase tracking-widest border px-2 py-0.5 ${
                           over
@@ -131,43 +136,15 @@ export default async function HistoricoPage() {
                       >
                         {over ? "ACIMA" : "DENTRO"}
                       </span>
-                    </Td>
+                    </TdLink>
+                    <TdLink week={w.weekStart} className="text-right text-tango-muted group-hover:text-tango-yellow transition-colors tg-display text-lg">
+                      →
+                    </TdLink>
                   </tr>
                 );
               })}
             </tbody>
           </table>
-        </div>
-      </section>
-
-      <section className="bg-tango-charcoal border border-tango-border p-6 lg:p-8">
-        <div className="mb-5 pb-4 border-b border-tango-border">
-          <h2 className="tg-display uppercase tracking-wider text-sm mb-1">
-            DOWNLOADS — PRÓXIMA FASE
-          </h2>
-          <p className="tg-mono text-[10px] uppercase tracking-widest text-tango-muted">
-            GERAÇÃO DE EXCEL/PDF VIA APP SERÁ IMPLEMENTADA EM BREVE
-          </p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div className="border border-tango-border p-5">
-            <div className="tg-mono text-[10px] uppercase tracking-widest text-tango-yellow mb-3">
-              01 — EXCEL SEMANAL
-            </div>
-            <div className="tg-display text-lg mb-2">Em breve</div>
-            <p className="tg-mono text-[11px] text-tango-muted">
-              MESMO FORMATO QUE VOCÊ JÁ CONHECE · GERADO ON-DEMAND
-            </p>
-          </div>
-          <div className="border border-tango-border p-5">
-            <div className="tg-mono text-[10px] uppercase tracking-widest text-tango-red mb-3">
-              02 — PDF DA SEMANA
-            </div>
-            <div className="tg-display text-lg mb-2">Em breve</div>
-            <p className="tg-mono text-[11px] text-tango-muted">
-              SNAPSHOT DA ABA SEMANA · PRONTO PRA IMPRIMIR
-            </p>
-          </div>
         </div>
       </section>
     </div>
@@ -185,4 +162,13 @@ function Th({ children, className = "" }: { children: React.ReactNode; className
 }
 function Td({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return <td className={`px-6 py-3 align-middle ${className}`}>{children}</td>;
+}
+function TdLink({ children, week, className = "" }: { children: React.ReactNode; week: string; className?: string }) {
+  return (
+    <td className={`align-middle ${className}`}>
+      <Link href={`/historico/${week}`} className="block px-6 py-3 -m-0">
+        {children}
+      </Link>
+    </td>
+  );
 }

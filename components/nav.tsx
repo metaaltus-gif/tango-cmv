@@ -22,13 +22,9 @@ const SECTIONS = [
   { key: "nav.history", href: "/historico" },
 ];
 
-function initialFor(name?: string | null, email?: string | null) {
-  if (name) {
-    const parts = name.trim().split(/\s+/);
-    return (parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "");
-  }
-  if (email) return email[0]?.toUpperCase() ?? "?";
-  return "?";
+function firstInitial(name?: string | null, email?: string | null) {
+  const source = (name?.trim() || email || "?").trim();
+  return (source[0] ?? "?").toUpperCase();
 }
 
 export function Nav({
@@ -52,7 +48,7 @@ export function Nav({
   };
 
   const displayName = userName || userEmail?.split("@")[0] || "?";
-  const initials = initialFor(userName, userEmail).toUpperCase();
+  const initial = firstInitial(userName, userEmail);
 
   return (
     <nav className="border-b border-tango-border bg-tango-black sticky top-0 z-20">
@@ -62,10 +58,10 @@ export function Nav({
             <Image
               src="/tango-horizontal.png"
               alt="Tango"
-              width={180}
-              height={48}
+              width={260}
+              height={64}
               priority
-              className="h-10 w-auto"
+              className="h-14 w-auto"
             />
           </Link>
 
@@ -129,8 +125,8 @@ export function Nav({
 
           {/* User chip */}
           <div className="flex items-center gap-2.5 pl-4 border-l border-tango-border">
-            <div className="w-8 h-8 bg-tango-yellow text-tango-black flex items-center justify-center tg-display text-[13px] font-black">
-              {initials}
+            <div className="w-9 h-9 bg-tango-yellow text-tango-black flex items-center justify-center tg-display text-[16px] font-black">
+              {initial}
             </div>
             <div className="hidden sm:flex flex-col leading-tight">
               <span className="text-tango-white text-[13px] font-bold tracking-tight">
