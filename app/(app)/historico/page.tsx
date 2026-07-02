@@ -82,7 +82,7 @@ export default async function HistoricoPage() {
             ⚠ {suspicious.length} SEMANA{suspicious.length > 1 ? "S" : ""} COM DATA SUSPEITA
           </p>
           <p className="text-tango-muted text-sm">
-            Semanas fora do período esperado ({CURRENT_YEAR - 1}–{CURRENT_YEAR + 1}) provavelmente vieram de leitura incorreta de data pela IA. Recomendado: acessar cada uma pra conferir e corrigir/deletar as notas no Supabase.
+            Semanas fora do período esperado ({CURRENT_YEAR - 1}–{CURRENT_YEAR + 1}) provavelmente vieram de leitura incorreta de data. Clique na semana marcada, encontre a nota e use o botão REPORTAR pra pedir correção.
           </p>
         </div>
       )}
