@@ -21,6 +21,7 @@ const SECTIONS = [
   { key: "nav.rules", href: "/regras" },
   { key: "nav.history", href: "/historico" },
   { key: "nav.corrections", href: "/correcoes" },
+  { key: "nav.audit", href: "/auditoria" },
 ];
 
 function firstInitial(name?: string | null, email?: string | null) {

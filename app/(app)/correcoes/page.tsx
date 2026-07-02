@@ -5,9 +5,16 @@ const ORG_ID = Number(process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || "1");
 
 export const dynamic = "force-dynamic";
 
-async function fetchCorrections() {
+async function fetchAll() {
   const supabase = createClient();
-  const { data, error } = await supabase
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: profile } = await supabase
+    .from("app_users")
+    .select("role")
+    .eq("id", user?.id ?? "")
+    .maybeSingle();
+
+  const { data: corrections } = await supabase
     .from("correction_requests")
     .select(
       "id, invoice_id, reported_by, reported_via, report_type, current_value, suggested_value, notes, status, resolved_by, resolved_at, resolution_notes, created_at, invoices(invoice_number, invoice_date, suppliers(name))"
@@ -15,15 +22,11 @@ async function fetchCorrections() {
     .eq("organization_id", ORG_ID)
     .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("corrections fetch error", error);
-    return [];
-  }
-  return data ?? [];
+  return { corrections: corrections ?? [], role: profile?.role ?? null };
 }
 
 export default async function CorrecoesPage() {
-  const corrections = await fetchCorrections();
+  const { corrections, role } = await fetchAll();
   const openCount = corrections.filter((c: any) => c.status === "open").length;
 
   return (
@@ -40,11 +43,11 @@ export default async function CorrecoesPage() {
           {openCount} <span className="text-tango-yellow">pendente{openCount === 1 ? "" : "s"}</span>
         </h1>
         <p className="text-tango-muted text-sm">
-          Solicitações reportadas via dashboard e Telegram. Owner aprova → dados são atualizados no banco.
+          Solicitações reportadas via app e Telegram. Manager aprova → dados são atualizados.
         </p>
       </div>
 
-      <CorrectionsClient initial={corrections as any} />
+      <CorrectionsClient initial={corrections as any} userRole={role as any} />
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Check, X, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { canApplyCorrections, type UserRole } from "@/lib/permissions";
 
 interface Correction {
   id: string;
@@ -18,22 +19,13 @@ interface Correction {
   resolved_at: string | null;
   resolution_notes: string | null;
   created_at: string;
-  invoices?: {
-    invoice_number: string;
-    invoice_date: string;
-    suppliers?: { name: string };
-  } | null;
+  invoices?: { invoice_number: string; invoice_date: string; suppliers?: { name: string } } | null;
 }
 
 const TYPE_LABELS: Record<string, string> = {
-  date: "DATA",
-  supplier: "FORNECEDOR",
-  amount: "VALOR",
-  classification: "CLASSIFICAÇÃO",
-  missing: "ITEM FALTANDO",
-  other: "OUTRO",
+  date: "DATA", supplier: "FORNECEDOR", amount: "VALOR",
+  classification: "CLASSIFICAÇÃO", missing: "ITEM FALTANDO", other: "OUTRO",
 };
-
 const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
   open: { label: "PENDENTE", cls: "border-tango-yellow text-tango-yellow" },
   in_review: { label: "EM ANÁLISE", cls: "border-tango-white text-tango-white" },
@@ -41,12 +33,19 @@ const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
   rejected: { label: "REJEITADA", cls: "border-tango-red text-tango-red" },
 };
 
-export function CorrectionsClient({ initial }: { initial: Correction[] }) {
+export function CorrectionsClient({
+  initial,
+  userRole,
+}: {
+  initial: Correction[];
+  userRole: UserRole;
+}) {
   const supabase = createClient();
   const [corrections, setCorrections] = useState<Correction[]>(initial);
   const [filter, setFilter] = useState<"all" | "open" | "resolved">("open");
   const [processing, setProcessing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const canApply = canApplyCorrections(userRole);
 
   const filtered = corrections.filter((c) => {
     if (filter === "all") return true;
@@ -67,13 +66,10 @@ export function CorrectionsClient({ initial }: { initial: Correction[] }) {
       })
       .eq("id", id)
       .select()
-      .single();
+      .maybeSingle();
     setProcessing(null);
-    if (error) {
-      setError(error.message);
-      return;
-    }
-    setCorrections((cs) => cs.map((c) => (c.id === id ? { ...c, ...data } : c)));
+    if (error) return setError(error.message);
+    if (data) setCorrections((cs) => cs.map((c) => (c.id === id ? { ...c, ...data } : c)));
   };
 
   const remove = async (id: string) => {
@@ -91,17 +87,19 @@ export function CorrectionsClient({ initial }: { initial: Correction[] }) {
         </div>
       )}
 
+      {!canApply && (
+        <div className="border border-tango-border bg-tango-panel/60 px-4 py-3 tg-mono text-[10px] uppercase tracking-widest text-tango-muted">
+          VOCÊ VÊ AS CORREÇÕES, MAS APENAS MANAGER PODE APROVAR/REJEITAR
+        </div>
+      )}
+
       <div className="flex items-center gap-3">
         {(["open", "resolved", "all"] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
+          <button key={f} onClick={() => setFilter(f)}
             className={`tg-mono text-[10px] uppercase tracking-widest border px-3 py-1.5 transition-colors ${
-              filter === f
-                ? "border-tango-yellow text-tango-yellow bg-tango-yellow/10"
+              filter === f ? "border-tango-yellow text-tango-yellow bg-tango-yellow/10"
                 : "border-tango-border text-tango-muted hover:text-tango-white"
-            }`}
-          >
+            }`}>
             {f === "open" ? "PENDENTES" : f === "resolved" ? "RESOLVIDAS" : "TODAS"}
           </button>
         ))}
@@ -144,53 +142,39 @@ export function CorrectionsClient({ initial }: { initial: Correction[] }) {
                     Reportado em {new Date(c.created_at).toLocaleString("pt-BR")}
                   </p>
                 </div>
-                {isOpen && (
+                {isOpen && canApply && (
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => updateStatus(c.id, "applied")}
-                      disabled={processing === c.id}
-                      className="tg-mono text-[10px] uppercase tracking-widest border border-green-500 text-green-500 hover:bg-green-500/10 px-3 py-1.5 flex items-center gap-1.5"
-                    >
+                    <button onClick={() => updateStatus(c.id, "applied")} disabled={processing === c.id}
+                      className="tg-mono text-[10px] uppercase tracking-widest border border-green-500 text-green-500 hover:bg-green-500/10 px-3 py-1.5 flex items-center gap-1.5">
                       <Check size={12} /> APLICAR
                     </button>
-                    <button
-                      onClick={() => updateStatus(c.id, "rejected")}
-                      disabled={processing === c.id}
-                      className="tg-mono text-[10px] uppercase tracking-widest border border-tango-red text-tango-red hover:bg-tango-red/10 px-3 py-1.5 flex items-center gap-1.5"
-                    >
+                    <button onClick={() => updateStatus(c.id, "rejected")} disabled={processing === c.id}
+                      className="tg-mono text-[10px] uppercase tracking-widest border border-tango-red text-tango-red hover:bg-tango-red/10 px-3 py-1.5 flex items-center gap-1.5">
                       <X size={12} /> REJEITAR
                     </button>
                   </div>
                 )}
-                <button
-                  onClick={() => remove(c.id)}
-                  className="text-tango-muted hover:text-tango-red p-1"
-                  title="Deletar"
-                >
-                  <Trash2 size={14} />
-                </button>
+                {canApply && (
+                  <button onClick={() => remove(c.id)} className="text-tango-muted hover:text-tango-red p-1" title="Deletar">
+                    <Trash2 size={14} />
+                  </button>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4 mt-3 pt-3 border-t border-tango-border">
                 <div>
-                  <p className="tg-mono text-[9px] uppercase tracking-widest text-tango-muted mb-1">
-                    VALOR ATUAL
-                  </p>
+                  <p className="tg-mono text-[9px] uppercase tracking-widest text-tango-muted mb-1">VALOR ATUAL</p>
                   <p className="text-tango-white text-sm">{c.current_value || "—"}</p>
                 </div>
                 <div>
-                  <p className="tg-mono text-[9px] uppercase tracking-widest text-tango-yellow mb-1">
-                    CORRETO
-                  </p>
+                  <p className="tg-mono text-[9px] uppercase tracking-widest text-tango-yellow mb-1">CORRETO</p>
                   <p className="text-tango-yellow text-sm font-bold">{c.suggested_value || "—"}</p>
                 </div>
               </div>
 
               {c.notes && (
                 <div className="mt-3 pt-3 border-t border-tango-border">
-                  <p className="tg-mono text-[9px] uppercase tracking-widest text-tango-muted mb-1">
-                    OBSERVAÇÕES
-                  </p>
+                  <p className="tg-mono text-[9px] uppercase tracking-widest text-tango-muted mb-1">OBSERVAÇÕES</p>
                   <p className="text-tango-muted text-sm">{c.notes}</p>
                 </div>
               )}

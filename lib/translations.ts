@@ -35,6 +35,7 @@ export const translations: Record<Locale, Dict> = {
     "nav.rules": "RULES",
     "nav.history": "HISTORY",
     "nav.corrections": "CORRECTIONS",
+    "nav.audit": "AUDIT",
     "nav.sync_ok": "SYNC OK",
 
     "modules.cmv": "CMV",
@@ -218,6 +219,7 @@ export const translations: Record<Locale, Dict> = {
     "nav.rules": "REGRAS",
     "nav.history": "HISTÓRICO",
     "nav.corrections": "CORREÇÕES",
+    "nav.audit": "AUDITORIA",
     "nav.sync_ok": "SYNC OK",
 
     "modules.cmv": "CMV",
@@ -401,6 +403,7 @@ export const translations: Record<Locale, Dict> = {
     "nav.rules": "REGLAS",
     "nav.history": "HISTORIAL",
     "nav.corrections": "CORRECCIONES",
+    "nav.audit": "AUDITORÍA",
     "nav.sync_ok": "SYNC OK",
 
     "modules.cmv": "CMV",
