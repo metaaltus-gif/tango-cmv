@@ -20,6 +20,7 @@ const SECTIONS = [
   { key: "nav.dashboard", href: "/dashboard" },
   { key: "nav.rules", href: "/regras" },
   { key: "nav.history", href: "/historico" },
+  { key: "nav.corrections", href: "/correcoes" },
 ];
 
 function firstInitial(name?: string | null, email?: string | null) {
@@ -123,7 +124,6 @@ export function Nav({
 
           <LocaleSwitcher />
 
-          {/* User chip */}
           <div className="flex items-center gap-2.5 pl-4 border-l border-tango-border">
             <div className="w-9 h-9 bg-tango-yellow text-tango-black flex items-center justify-center tg-display text-[16px] font-black">
               {initial}

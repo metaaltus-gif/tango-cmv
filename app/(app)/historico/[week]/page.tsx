@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { formatUSD, isoDate } from "@/lib/utils";
+import { formatUSD, isoDate, formatWeekRange } from "@/lib/utils";
+import { InvoicesTableClient } from "@/components/invoices-table-client";
 
 const ORG_ID = Number(process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || "1");
 const META = 15000;
@@ -19,7 +20,6 @@ function addDays(d: Date, n: number) {
 }
 
 async function fetchWeekDetail(weekStart: string) {
-  // Valida formato YYYY-MM-DD
   if (!/^\d{4}-\d{2}-\d{2}$/.test(weekStart)) return null;
 
   const supabase = createClient();
@@ -132,7 +132,6 @@ export default async function WeekDetailPage({ params }: Props) {
 
   return (
     <div className="max-w-7xl mx-auto space-y-4">
-      {/* Breadcrumb */}
       <div className="flex items-center gap-3">
         <Link
           href="/historico"
@@ -142,12 +141,11 @@ export default async function WeekDetailPage({ params }: Props) {
         </Link>
         <span className="text-tango-border">/</span>
         <p className="tg-mono text-[10px] uppercase tracking-widest3 text-tango-yellow">
-          SEMANA {data.weekStart} — {data.weekEnd}
+          SEMANA {formatWeekRange(data.weekStart, "pt")}
         </p>
         <div className="flex-1 h-px bg-tango-border" />
       </div>
 
-      {/* Hero */}
       <div className="bg-tango-charcoal border border-tango-border p-8 lg:p-10 relative tg-card-line">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-8">
           <div>
@@ -197,7 +195,6 @@ export default async function WeekDetailPage({ params }: Props) {
         </div>
       </div>
 
-      {/* Downloads */}
       <div className="bg-tango-charcoal border border-tango-border p-6 lg:p-7">
         <div className="flex items-center justify-between mb-4 pb-4 border-b border-tango-border">
           <div>
@@ -235,7 +232,6 @@ export default async function WeekDetailPage({ params }: Props) {
         </div>
       </div>
 
-      {/* Fornecedores */}
       {data.suppliers.length > 0 && (
         <div className="bg-tango-charcoal border border-tango-border p-6 lg:p-8">
           <div className="flex items-center justify-between mb-5 pb-4 border-b border-tango-border">
@@ -264,55 +260,7 @@ export default async function WeekDetailPage({ params }: Props) {
         </div>
       )}
 
-      {/* Notas */}
-      <div className="bg-tango-charcoal border border-tango-border">
-        <div className="flex items-center justify-between px-6 py-5 border-b border-tango-border">
-          <h3 className="tg-display uppercase tracking-wider text-sm">NOTAS DA SEMANA</h3>
-          <span className="tg-mono text-[10px] uppercase tracking-widest text-tango-muted">
-            {data.invoices.length} notas
-          </span>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-tango-border">
-                <th className="tg-mono text-[9px] uppercase tracking-widest3 text-tango-muted font-bold text-left px-6 py-3">DATA</th>
-                <th className="tg-mono text-[9px] uppercase tracking-widest3 text-tango-muted font-bold text-left px-6 py-3">FORNECEDOR</th>
-                <th className="tg-mono text-[9px] uppercase tracking-widest3 text-tango-muted font-bold text-left px-6 py-3">Nº NOTA</th>
-                <th className="tg-mono text-[9px] uppercase tracking-widest3 text-tango-muted font-bold text-left px-6 py-3">PAGAMENTO</th>
-                <th className="tg-mono text-[9px] uppercase tracking-widest3 text-tango-muted font-bold text-right px-6 py-3">ITEMS</th>
-                <th className="tg-mono text-[9px] uppercase tracking-widest3 text-tango-muted font-bold text-right px-6 py-3">CMV</th>
-                <th className="tg-mono text-[9px] uppercase tracking-widest3 text-tango-muted font-bold text-right px-6 py-3">TOTAL</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.invoices.map((inv) => (
-                <tr key={inv.id} className="border-b border-tango-border/40 hover:bg-tango-panel transition-colors">
-                  <td className="px-6 py-3 tg-mono text-xs text-tango-muted">{inv.date}</td>
-                  <td className="px-6 py-3 tg-display uppercase tracking-wider text-sm">
-                    {inv.supplier.replace(/_/g, " ")}
-                  </td>
-                  <td className="px-6 py-3 tg-mono text-xs">{inv.number}</td>
-                  <td className="px-6 py-3">
-                    {inv.payment && (
-                      <span className="tg-mono text-[9px] uppercase tracking-widest border border-tango-border text-tango-muted px-2 py-0.5">
-                        {inv.payment}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-6 py-3 tg-mono text-xs text-right">{inv.items}</td>
-                  <td className="px-6 py-3 tg-mono text-xs text-right text-tango-yellow font-bold">
-                    {formatUSD(inv.cmvTotal)}
-                  </td>
-                  <td className="px-6 py-3 tg-mono text-xs text-right font-bold">
-                    {formatUSD(inv.total)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <InvoicesTableClient invoices={data.invoices} />
     </div>
   );
 }
