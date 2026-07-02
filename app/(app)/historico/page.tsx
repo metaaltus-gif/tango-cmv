@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { formatUSD, getWeekStart, isoDate } from "@/lib/utils";
+import { formatUSD, getWeekStart, isoDate, formatWeekRange } from "@/lib/utils";
 
 const ORG_ID = Number(process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || "1");
 const META = 15000;
+const CURRENT_YEAR = new Date().getUTCFullYear();
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +53,10 @@ async function fetchHistory() {
 
 export default async function HistoricoPage() {
   const weeks = await fetchHistory();
+  const suspicious = weeks.filter((w) => {
+    const y = parseInt(w.weekStart.slice(0, 4));
+    return y < CURRENT_YEAR - 1 || y > CURRENT_YEAR + 1;
+  });
 
   return (
     <div className="max-w-7xl mx-auto space-y-4">
@@ -70,6 +75,17 @@ export default async function HistoricoPage() {
           Clique numa linha pra ver detalhes, notas e downloads da semana.
         </p>
       </div>
+
+      {suspicious.length > 0 && (
+        <div className="border border-tango-red bg-tango-red/10 px-5 py-4">
+          <p className="tg-mono text-[10px] uppercase tracking-widest3 text-tango-red mb-2">
+            ⚠ {suspicious.length} SEMANA{suspicious.length > 1 ? "S" : ""} COM DATA SUSPEITA
+          </p>
+          <p className="text-tango-muted text-sm">
+            Semanas fora do período esperado ({CURRENT_YEAR - 1}–{CURRENT_YEAR + 1}) provavelmente vieram de leitura incorreta de data pela IA. Recomendado: acessar cada uma pra conferir e corrigir/deletar as notas no Supabase.
+          </p>
+        </div>
+      )}
 
       <section className="bg-tango-charcoal border border-tango-border">
         <div className="overflow-x-auto">
@@ -97,10 +113,14 @@ export default async function HistoricoPage() {
               {weeks.map((w, idx) => {
                 const over = w.cmv > META;
                 const pricePerLb = w.salmonLbs > 0 ? w.salmonUsd / w.salmonLbs : 0;
+                const y = parseInt(w.weekStart.slice(0, 4));
+                const isSuspicious = y < CURRENT_YEAR - 1 || y > CURRENT_YEAR + 1;
                 return (
                   <tr
                     key={w.weekStart}
-                    className="border-b border-tango-border/40 hover:bg-tango-panel transition-colors cursor-pointer group"
+                    className={`border-b border-tango-border/40 hover:bg-tango-panel transition-colors cursor-pointer group ${
+                      isSuspicious ? "bg-tango-red/5" : ""
+                    }`}
                   >
                     <Td>
                       <Link
@@ -110,9 +130,14 @@ export default async function HistoricoPage() {
                         <span className="tg-mono text-[10px] text-tango-yellow">
                           {String(weeks.length - idx).padStart(2, "0")}
                         </span>
-                        <span className="tg-display uppercase tracking-wider text-sm group-hover:text-tango-yellow transition-colors">
-                          {w.weekStart}
+                        <span className={`tg-display uppercase tracking-wider text-sm group-hover:text-tango-yellow transition-colors ${isSuspicious ? "text-tango-red" : ""}`}>
+                          {formatWeekRange(w.weekStart, "pt")}
                         </span>
+                        {isSuspicious && (
+                          <span className="tg-mono text-[8px] uppercase tracking-widest border border-tango-red text-tango-red px-1.5 py-0.5">
+                            ⚠ DATA
+                          </span>
+                        )}
                       </Link>
                     </Td>
                     <TdLink week={w.weekStart} className="text-right tg-mono text-sm font-bold">{formatUSD(w.cmv)}</TdLink>
@@ -153,9 +178,7 @@ export default async function HistoricoPage() {
 
 function Th({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <th
-      className={`tg-mono text-[9px] uppercase tracking-widest3 text-tango-muted font-bold text-left px-6 py-3 ${className}`}
-    >
+    <th className={`tg-mono text-[9px] uppercase tracking-widest3 text-tango-muted font-bold text-left px-6 py-3 ${className}`}>
       {children}
     </th>
   );

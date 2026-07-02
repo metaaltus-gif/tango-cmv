@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { CmvChart } from "@/components/cmv-chart";
-import { formatUSD, getWeekStart, isoDate } from "@/lib/utils";
+import { formatUSD, getWeekStart, isoDate, formatWeekRangeShort } from "@/lib/utils";
 
 const ORG_ID = Number(process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || "1");
 const META = 15000;
@@ -66,7 +66,6 @@ async function fetchData() {
     }
     wk.invoices.add(it.invoice_id);
 
-    // Sum supplier totals only for current week
     if (isoDate(ws) === isoDate(currentWeekStart)) {
       const sn = inv.suppliers?.name || "DESCONHECIDO";
       if (it.is_cmv) supTotals.set(sn, (supTotals.get(sn) || 0) + tp);
@@ -92,7 +91,7 @@ export default async function DashboardPage() {
   const last = current ?? weeks[weeks.length - 1] ?? null;
 
   const chartData = weeks.map((w) => ({
-    week: w.weekStart.slice(5).replace("-", "/"),
+    week: formatWeekRangeShort(w.weekStart, "pt"),
     cmv: Math.round(w.cmv * 100) / 100,
     meta: META,
   }));
@@ -103,17 +102,10 @@ export default async function DashboardPage() {
   const supTotal = suppliers.reduce((acc, s) => acc + s.total, 0);
   const maxSup = suppliers[0]?.total || 1;
 
-  const weekLabel = last
-    ? `${last.weekStart.slice(8)}—${parseInt(last.weekStart.slice(8)) + 6} ${
-        ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"][
-          parseInt(last.weekStart.slice(5, 7)) - 1
-        ]
-      }`
-    : "—";
+  const weekLabel = last ? formatWeekRangeShort(last.weekStart, "pt") : "—";
 
   return (
     <div className="max-w-7xl mx-auto space-y-4">
-      {/* Eyebrow */}
       <div className="flex items-center gap-3 mb-4">
         <p className="tg-mono text-[10px] uppercase tracking-widest3 text-tango-yellow">
           CMV · SEMANA {weekLabel}
@@ -121,7 +113,6 @@ export default async function DashboardPage() {
         <div className="flex-1 h-px bg-tango-border" />
       </div>
 
-      {/* Hero */}
       <div className="bg-tango-charcoal border border-tango-border p-8 lg:p-10 relative tg-card-line">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-8">
           <div>
@@ -171,7 +162,6 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Stats row */}
       <div className="grid grid-cols-1 md:grid-cols-3 border border-tango-border bg-tango-border gap-px">
         <StatBox num="01 — SALMÃO" value={formatUSD(last?.salmonUsd ?? 0)} sub={cmvTotal ? `${(((last?.salmonUsd ?? 0) / cmvTotal) * 100).toFixed(0)}% do CMV` : "—"} />
         <StatBox num="02 — TOTAL FORNECEDORES" value={formatUSD(supTotal)} sub={`top 5 da semana`} />
@@ -184,7 +174,6 @@ export default async function DashboardPage() {
         />
       </div>
 
-      {/* Chart */}
       <div className="bg-tango-charcoal border border-tango-border p-6 lg:p-8">
         <div className="flex items-center justify-between mb-5 pb-4 border-b border-tango-border">
           <h3 className="tg-display uppercase tracking-wider text-sm">CMV — ÚLTIMAS 8 SEMANAS</h3>
@@ -195,7 +184,6 @@ export default async function DashboardPage() {
         <CmvChart data={chartData} />
       </div>
 
-      {/* Suppliers */}
       <div className="bg-tango-charcoal border border-tango-border p-6 lg:p-8">
         <div className="flex items-center justify-between mb-5 pb-4 border-b border-tango-border">
           <h3 className="tg-display uppercase tracking-wider text-sm">FORNECEDORES — TOP 5</h3>
@@ -261,14 +249,8 @@ function StatBox({
   danger?: boolean;
 }) {
   return (
-    <div
-      className={`bg-tango-charcoal p-6 lg:p-7 tg-card-line ${danger ? "danger" : ""}`}
-    >
-      <p
-        className={`tg-mono text-[10px] uppercase tracking-widest3 mb-3 ${
-          danger ? "text-tango-red" : "text-tango-yellow"
-        }`}
-      >
+    <div className={`bg-tango-charcoal p-6 lg:p-7 tg-card-line ${danger ? "danger" : ""}`}>
+      <p className={`tg-mono text-[10px] uppercase tracking-widest3 mb-3 ${danger ? "text-tango-red" : "text-tango-yellow"}`}>
         {num}
       </p>
       <p className={`tg-display text-3xl lg:text-4xl leading-none tracking-tight ${valueColor}`}>
