@@ -29,7 +29,7 @@ async function fetchWeekDetail(weekStart: string) {
   const { data: items, error } = await supabase
     .from("items")
     .select(
-      "id, total_price, is_cmv, quantity, unit, subcategory, category, description, product_type, invoice_id, invoices!inner(id, invoice_number, invoice_date, payment_method, organization_id, suppliers(name))"
+      "id, total_price, is_cmv, quantity, unit, subcategory, category, description, product_type, invoice_id, invoices!inner(id, invoice_number, invoice_date, payment_method, receipt_image_url, organization_id, suppliers(name))"
     )
     .eq("invoices.organization_id", ORG_ID)
     .gte("invoices.invoice_date", isoDate(startDate))
@@ -49,6 +49,7 @@ async function fetchWeekDetail(weekStart: string) {
       date: string;
       supplier: string;
       payment: string | null;
+      receiptUrl: string | null;
       total: number;
       cmvTotal: number;
       items: number;
@@ -79,6 +80,7 @@ async function fetchWeekDetail(weekStart: string) {
         date: inv.invoice_date,
         supplier: inv.suppliers?.name || "?",
         payment: inv.payment_method,
+        receiptUrl: inv.receipt_image_url ?? null,
         total: 0,
         cmvTotal: 0,
         items: 0,
