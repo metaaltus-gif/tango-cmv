@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Flag } from "lucide-react";
+import { Flag, Eye } from "lucide-react";
 import { formatUSD } from "@/lib/utils";
 import { ReportIssueModal } from "@/components/report-issue-modal";
 
@@ -14,6 +14,7 @@ interface Invoice {
   total: number;
   cmvTotal: number;
   items: number;
+  receiptUrl?: string | null;
 }
 
 export function InvoicesTableClient({ invoices }: { invoices: Invoice[] }) {
@@ -67,14 +68,28 @@ export function InvoicesTableClient({ invoices }: { invoices: Invoice[] }) {
                   {formatUSD(inv.total)}
                 </td>
                 <td className="px-6 py-3 text-center">
-                  <button
-                    onClick={() => setReportOpen(inv)}
-                    className="tg-mono text-[10px] uppercase tracking-widest text-tango-muted hover:text-tango-red transition-colors inline-flex items-center gap-1.5 border border-tango-border hover:border-tango-red px-2.5 py-1"
-                    title="Reportar erro nessa nota"
-                  >
-                    <Flag size={11} />
-                    REPORTAR
-                  </button>
+                  <div className="inline-flex items-center gap-2">
+                    {inv.receiptUrl && (
+                      <a
+                        href={inv.receiptUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="tg-mono text-[10px] uppercase tracking-widest text-tango-muted hover:text-tango-yellow transition-colors inline-flex items-center gap-1.5 border border-tango-border hover:border-tango-yellow px-2.5 py-1"
+                        title="Ver imagem original da nota"
+                      >
+                        <Eye size={11} />
+                        VER
+                      </a>
+                    )}
+                    <button
+                      onClick={() => setReportOpen(inv)}
+                      className="tg-mono text-[10px] uppercase tracking-widest text-tango-muted hover:text-tango-red transition-colors inline-flex items-center gap-1.5 border border-tango-border hover:border-tango-red px-2.5 py-1"
+                      title="Reportar erro nessa nota"
+                    >
+                      <Flag size={11} />
+                      REPORTAR
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
