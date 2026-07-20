@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
@@ -7,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
 import { LocaleSwitcher } from "@/components/locale-switcher";
+import { PasswordChangeModal } from "@/components/password-change-modal";
 
 const MODULES = [
   { key: "modules.cmv", href: "/dashboard", active: true },
@@ -42,6 +44,22 @@ export function Nav({
   const router = useRouter();
   const supabase = createClient();
   const t = useT();
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [pwdOpen, setPwdOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Fecha o dropdown ao clicar fora
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [menuOpen]);
 
   const logout = async () => {
     await supabase.auth.signOut();
@@ -125,32 +143,57 @@ export function Nav({
 
           <LocaleSwitcher />
 
-          <div className="flex items-center gap-2.5 pl-4 border-l border-tango-border">
-            <div className="w-9 h-9 bg-tango-yellow text-tango-black flex items-center justify-center tg-display text-[16px] font-black">
-              {initial}
-            </div>
-            <div className="hidden sm:flex flex-col leading-tight">
-              <span className="text-tango-white text-[13px] font-bold tracking-tight">
-                {displayName}
-              </span>
-              {userRole && (
-                <span className="tg-mono text-[8.5px] uppercase tracking-widest text-tango-muted">
-                  {userRole} · {userEmail}
-                </span>
-              )}
-              {!userRole && userEmail && (
-                <span className="tg-mono text-[8.5px] uppercase tracking-widest text-tango-muted">
-                  {userEmail}
-                </span>
-              )}
-            </div>
+          <div className="flex items-center gap-2.5 pl-4 border-l border-tango-border relative" ref={menuRef}>
             <button
-              onClick={logout}
-              className="tg-mono text-[10px] uppercase tracking-widest font-bold text-tango-muted hover:text-tango-red transition-colors ml-2"
+              onClick={() => setMenuOpen((v) => !v)}
+              className="flex items-center gap-2.5 cursor-pointer hover:opacity-80 transition-opacity"
+              title={t("common.account_menu") || "Menu da conta"}
             >
-              {t("common.logout")}
+              <div className="w-9 h-9 bg-tango-yellow text-tango-black flex items-center justify-center tg-display text-[16px] font-black">
+                {initial}
+              </div>
+              <div className="hidden sm:flex flex-col leading-tight items-start">
+                <span className="text-tango-white text-[13px] font-bold tracking-tight">
+                  {displayName}
+                </span>
+                {userRole && (
+                  <span className="tg-mono text-[8.5px] uppercase tracking-widest text-tango-muted">
+                    {userRole} · {userEmail}
+                  </span>
+                )}
+                {!userRole && userEmail && (
+                  <span className="tg-mono text-[8.5px] uppercase tracking-widest text-tango-muted">
+                    {userEmail}
+                  </span>
+                )}
+              </div>
             </button>
+
+            {menuOpen && (
+              <div className="absolute right-0 top-full mt-2 w-56 bg-tango-charcoal border border-tango-border shadow-xl z-30">
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setPwdOpen(true);
+                  }}
+                  className="w-full text-left tg-mono text-[10px] uppercase tracking-widest font-bold text-tango-white hover:bg-tango-panel px-4 py-3 border-b border-tango-border transition-colors"
+                >
+                  {t("common.change_password") || "Alterar senha"}
+                </button>
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    logout();
+                  }}
+                  className="w-full text-left tg-mono text-[10px] uppercase tracking-widest font-bold text-tango-muted hover:text-tango-red hover:bg-tango-panel px-4 py-3 transition-colors"
+                >
+                  {t("common.logout")}
+                </button>
+              </div>
+            )}
           </div>
+
+          {pwdOpen && <PasswordChangeModal onClose={() => setPwdOpen(false)} />}
         </div>
       </div>
     </nav>
