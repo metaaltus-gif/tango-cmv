@@ -1,6 +1,9 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+// Rotas publicas — nao precisa estar autenticado pra acessar
+const PUBLIC_ROUTES = ["/login", "/reset-password", "/auth"];
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -37,15 +40,12 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const url = request.nextUrl.clone();
-  const isLoginRoute = url.pathname.startsWith("/login") || url.pathname.startsWith("/auth");
+  const isPublicRoute = PUBLIC_ROUTES.some((route) =>
+    url.pathname.startsWith(route)
+  );
 
-  if (!user && !isLoginRoute) {
+  if (!user && !isPublicRoute) {
     url.pathname = "/login";
-    return NextResponse.redirect(url);
-  }
-
-  if (user && url.pathname === "/login") {
-    url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
 
