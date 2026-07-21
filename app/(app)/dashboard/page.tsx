@@ -113,13 +113,13 @@ export default async function DashboardPage() {
         <div className="flex-1 h-px bg-tango-border" />
       </div>
 
-      <div className="bg-tango-charcoal border border-tango-border p-8 lg:p-10 relative tg-card-line">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-8">
+      <div className="bg-tango-charcoal border border-tango-border p-6 sm:p-8 lg:p-10 relative tg-card-line">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 lg:gap-8">
           <div>
             <p className="tg-eyebrow mb-4">TOTAL DA SEMANA</p>
-            <div className="tg-display text-6xl lg:text-8xl leading-none tracking-tight text-tango-white">
+            <div className="tg-display text-5xl sm:text-6xl lg:text-8xl leading-none tracking-tight text-tango-white break-words">
               {formatUSD(cmvTotal).split(".")[0]}
-              <span className="text-tango-yellow text-3xl lg:text-5xl">
+              <span className="text-tango-yellow text-2xl sm:text-3xl lg:text-5xl">
                 .{formatUSD(cmvTotal).split(".")[1] ?? "00"}
               </span>
             </div>
@@ -183,6 +183,49 @@ export default async function DashboardPage() {
         </div>
         <CmvChart data={chartData} />
       </div>
+
+      {last?.weekStart && (
+        <div className="bg-tango-charcoal border border-tango-border p-6 lg:p-8">
+          <div className="flex items-center justify-between mb-4 pb-4 border-b border-tango-border">
+            <h3 className="tg-display uppercase tracking-wider text-sm">
+              EXPORTAR SEMANA ATUAL
+            </h3>
+            <span className="tg-mono text-[10px] uppercase tracking-widest text-tango-muted hidden sm:inline">
+              {weekLabel}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <a
+              href={`/api/reports/xlsx?week=${last.weekStart}`}
+              className="border border-tango-border p-4 sm:p-5 hover:border-tango-yellow hover:bg-tango-panel transition-colors group"
+            >
+              <div className="tg-mono text-[10px] uppercase tracking-widest text-tango-yellow mb-2">
+                01 — EXCEL
+              </div>
+              <div className="tg-display text-base sm:text-lg group-hover:text-tango-yellow">
+                Baixar .xlsx →
+              </div>
+              <p className="tg-mono text-[11px] text-tango-muted mt-2">
+                Formato CMV_CONTROL v36
+              </p>
+            </a>
+            <a
+              href={`/api/reports/pdf?week=${last.weekStart}`}
+              className="border border-tango-border p-4 sm:p-5 hover:border-tango-red hover:bg-tango-panel transition-colors group"
+            >
+              <div className="tg-mono text-[10px] uppercase tracking-widest text-tango-red mb-2">
+                02 — PDF
+              </div>
+              <div className="tg-display text-base sm:text-lg group-hover:text-tango-red">
+                Baixar .pdf →
+              </div>
+              <p className="tg-mono text-[11px] text-tango-muted mt-2">
+                Snapshot da aba SEMANA
+              </p>
+            </a>
+          </div>
+        </div>
+      )}
 
       <div className="bg-tango-charcoal border border-tango-border p-6 lg:p-8">
         <div className="flex items-center justify-between mb-5 pb-4 border-b border-tango-border">
@@ -273,15 +316,17 @@ function SupplierRow({
   isTop: boolean;
 }) {
   return (
-    <div className="grid grid-cols-[120px_1fr_120px] gap-4 items-center py-2.5 border-b border-tango-border/50 last:border-b-0">
-      <div className="tg-display uppercase tracking-wider text-[13px]">{name.replace(/_/g, " ")}</div>
-      <div className="h-1.5 bg-tango-black border border-tango-border relative">
+    <div className="grid grid-cols-[1fr_auto] sm:grid-cols-[140px_1fr_120px] gap-3 sm:gap-4 items-center py-2.5 border-b border-tango-border/50 last:border-b-0">
+      <div className="tg-display uppercase tracking-wider text-[12px] sm:text-[13px] truncate">
+        {name.replace(/_/g, " ")}
+      </div>
+      <div className="hidden sm:block h-1.5 bg-tango-black border border-tango-border relative">
         <div
           className={`h-full ${isTop ? "bg-tango-yellow" : "bg-tango-muted"}`}
           style={{ width: `${Math.min(pct, 100)}%` }}
         />
       </div>
-      <div className="tg-mono text-right text-xs font-bold">
+      <div className="tg-mono text-right text-xs font-bold whitespace-nowrap">
         {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount)}
       </div>
     </div>
