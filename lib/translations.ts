@@ -89,7 +89,7 @@ export const translations: Record<Locale, Dict> = {
     "login.reset_subtitle":
       "We'll send a link to your email so you can pick a new password.",
     "login.reset_sent":
-      "Check your email — we sent you a reset link. It expires in 1 hour.",
+      "Check your email — we sent you a reset link. It expires in 1 hour. If you don't see it, please check your spam folder.",
     "login.error_generic": "Authentication error",
     "login.signup_confirm": "Account created. Check your email to confirm.",
     "login.module_cost": "COST",
@@ -281,7 +281,7 @@ export const translations: Record<Locale, Dict> = {
     "login.reset_subtitle":
       "Vamos te enviar um link no email pra você criar uma senha nova.",
     "login.reset_sent":
-      "Confere seu email — enviamos o link de recuperação. Vale por 1 hora.",
+      "Confere seu email — enviamos o link de recuperação. Vale por 1 hora. Se não achar, verifique a pasta de spam.",
     "login.error_generic": "Erro ao autenticar",
     "login.signup_confirm": "Conta criada. Confira seu email pra confirmar.",
     "login.module_cost": "CUSTO",
@@ -473,7 +473,7 @@ export const translations: Record<Locale, Dict> = {
     "login.reset_subtitle":
       "Te enviaremos un enlace a tu correo para elegir una nueva contraseña.",
     "login.reset_sent":
-      "Revisa tu correo — te enviamos el enlace de recuperación. Expira en 1 hora.",
+      "Revisa tu correo — te enviamos el enlace de recuperación. Expira en 1 hora. Si no lo ves, revisa la carpeta de spam.",
     "login.error_generic": "Error de autenticación",
     "login.signup_confirm":
       "Cuenta creada. Revisa tu correo para confirmar.",
