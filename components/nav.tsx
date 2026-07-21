@@ -49,7 +49,6 @@ export function Nav({
   const [pwdOpen, setPwdOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Fecha o dropdown ao clicar fora
   useEffect(() => {
     if (!menuOpen) return;
     const handler = (e: MouseEvent) => {
@@ -72,20 +71,20 @@ export function Nav({
 
   return (
     <nav className="border-b border-tango-border bg-tango-black sticky top-0 z-20">
-      <div className="flex items-center justify-between px-6 lg:px-8 py-3">
-        <div className="flex items-center gap-6">
-          <Link href="/dashboard" className="flex items-center">
+      <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 gap-3">
+        <div className="flex items-center gap-3 sm:gap-6 min-w-0">
+          <Link href="/dashboard" className="flex items-center flex-shrink-0">
             <Image
               src="/tango-horizontal.png"
               alt="Tango"
               width={260}
               height={64}
               priority
-              className="h-14 w-auto"
+              className="h-10 sm:h-14 w-auto"
             />
           </Link>
 
-          <div className="flex items-center gap-3 pl-5 border-l border-tango-border">
+          <div className="hidden md:flex items-center gap-3 pl-5 border-l border-tango-border">
             {MODULES.map((m) => (
               <span
                 key={m.key}
@@ -115,7 +114,7 @@ export function Nav({
           </div>
         </div>
 
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-2 sm:gap-5">
           <div className="hidden md:flex items-center gap-4">
             {SECTIONS.map((s) => {
               const active = pathname === s.href || pathname.startsWith(s.href + "/");
@@ -143,11 +142,11 @@ export function Nav({
 
           <LocaleSwitcher />
 
-          <div className="flex items-center gap-2.5 pl-4 border-l border-tango-border relative" ref={menuRef}>
+          <div className="flex items-center gap-2.5 sm:pl-4 sm:border-l border-tango-border relative" ref={menuRef}>
             <button
               onClick={() => setMenuOpen((v) => !v)}
               className="flex items-center gap-2.5 cursor-pointer hover:opacity-80 transition-opacity"
-              title={t("common.account_menu") || "Menu da conta"}
+              title={t("account.change_password") || "Menu"}
             >
               <div className="w-9 h-9 bg-tango-yellow text-tango-black flex items-center justify-center tg-display text-[16px] font-black">
                 {initial}
@@ -171,6 +170,19 @@ export function Nav({
 
             {menuOpen && (
               <div className="absolute right-0 top-full mt-2 w-56 bg-tango-charcoal border border-tango-border shadow-xl z-30">
+                {/* Sessões visíveis apenas no mobile (fora do nav) */}
+                <div className="md:hidden border-b border-tango-border">
+                  {SECTIONS.map((s) => (
+                    <Link
+                      key={s.key}
+                      href={s.href}
+                      onClick={() => setMenuOpen(false)}
+                      className="block tg-mono text-[10px] uppercase tracking-widest font-bold text-tango-muted hover:text-tango-yellow hover:bg-tango-panel px-4 py-3 transition-colors"
+                    >
+                      {t(s.key)}
+                    </Link>
+                  ))}
+                </div>
                 <button
                   onClick={() => {
                     setMenuOpen(false);
@@ -178,7 +190,7 @@ export function Nav({
                   }}
                   className="w-full text-left tg-mono text-[10px] uppercase tracking-widest font-bold text-tango-white hover:bg-tango-panel px-4 py-3 border-b border-tango-border transition-colors"
                 >
-                  {t("common.change_password") || "Alterar senha"}
+                  {t("account.change_password_short")}
                 </button>
                 <button
                   onClick={() => {
