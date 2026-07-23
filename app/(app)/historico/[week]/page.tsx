@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatUSD, isoDate, formatWeekRange } from "@/lib/utils";
 import { InvoicesTableClient } from "@/components/invoices-table-client";
+import type { UserRole } from "@/lib/permissions";
 
 const ORG_ID = Number(process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || "1");
 const META = 15000;
@@ -110,6 +111,18 @@ async function fetchWeekDetail(weekStart: string) {
     .map(([name, total]) => ({ name, total }))
     .sort((a, b) => b.total - a.total);
 
+  // Pega role do usuario logado
+  const { data: { user } } = await supabase.auth.getUser();
+  let userRole: UserRole | undefined = undefined;
+  if (user) {
+    const { data: appUser } = await supabase
+      .from("app_users")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+    userRole = (appUser?.role as UserRole) ?? undefined;
+  }
+
   return {
     weekStart,
     weekEnd: isoDate(endDate),
@@ -120,6 +133,7 @@ async function fetchWeekDetail(weekStart: string) {
     invoices,
     suppliers,
     totalItems: items?.length ?? 0,
+    userRole,
   };
 }
 
@@ -262,7 +276,7 @@ export default async function WeekDetailPage({ params }: Props) {
         </div>
       )}
 
-      <InvoicesTableClient invoices={data.invoices} />
+      <InvoicesTableClient invoices={data.invoices} userRole={data.userRole} />
     </div>
   );
 }
