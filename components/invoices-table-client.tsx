@@ -33,7 +33,7 @@ export function InvoicesTableClient({
   const [deleteOpen, setDeleteOpen] = useState<Invoice | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const canDelete = canApplyCorrections(userRole);
+  const canDelete = userRole ? canApplyCorrections(userRole) : false;
 
   const doDelete = async () => {
     if (!deleteOpen) return;
