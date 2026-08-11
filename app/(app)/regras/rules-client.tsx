@@ -5,6 +5,7 @@ import { Pencil, Save, X, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SupplierItemsModal } from "@/components/supplier-items-modal";
 import type { SupplierRule, CmvRule, ClassificationMode } from "@/lib/types";
 
 const ORG_ID = Number(process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || "1");
@@ -22,6 +23,35 @@ export function RulesClient({
   const [supplierRules, setSupplierRules] = useState(initialSupplierRules);
   const [cmvRules, setCmvRules] = useState(initialCmvRules);
   const [error, setError] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<{ type: "ok" | "err"; msg: string } | null>(null);
+  const [openItemsModal, setOpenItemsModal] = useState<{ id: number; name: string } | null>(null);
+
+  // Flash de sucesso/erro pra QUALQUER save. "ok" some rápido, "err" fica.
+  const flash = (type: "ok" | "err", msg: string) => {
+    setSaveStatus({ type, msg });
+    if (type === "ok") setTimeout(() => setSaveStatus(null), 2000);
+  };
+
+  // Auto-save centralizado: garante que se count=0 OU erro, aparece banner.
+  const runSave = async <T,>(
+    label: string,
+    op: () => Promise<{ data: T | null; error: any; count?: number | null }>,
+    onOk?: (data: T) => void
+  ): Promise<boolean> => {
+    setSaveStatus({ type: "ok", msg: `Salvando ${label}…` });
+    const { data, error, count } = await op();
+    if (error) {
+      flash("err", `NÃO SALVOU ${label}: ${error.message}`);
+      return false;
+    }
+    if (count === 0) {
+      flash("err", `NÃO SALVOU ${label}: RLS bloqueou (0 rows).`);
+      return false;
+    }
+    if (data && onOk) onOk(data);
+    flash("ok", `${label} SALVO ✓`);
+    return true;
+  };
 
   // ---- SUPPLIER RULES ----
   const [editingSup, setEditingSup] = useState<number | null>(null);
@@ -142,31 +172,32 @@ export function RulesClient({
   const saveCmv = async () => {
     if (!editingCmv) return;
     setSaving(true);
-    setError(null);
-    const { data, error } = await supabase
-      .from("org_cmv_rules")
-      .update({
-        category: draftCmv.category,
-        subcategory: draftCmv.subcategory || null,
-        is_cmv: draftCmv.is_cmv,
-        label: draftCmv.label,
-        notes: draftCmv.notes,
-      })
-      .eq("id", editingCmv)
-      .select()
-      .single();
+    const ok = await runSave<CmvRule>(
+      "regra CMV",
+      () =>
+        supabase
+          .from("org_cmv_rules")
+          .update({
+            category: draftCmv.category,
+            subcategory: draftCmv.subcategory || null,
+            is_cmv: draftCmv.is_cmv,
+            label: draftCmv.label,
+            notes: draftCmv.notes,
+          })
+          .eq("id", editingCmv)
+          .select()
+          .single() as any,
+      (data) => setCmvRules((rs) => rs.map((r) => (r.id === editingCmv ? (data as CmvRule) : r)))
+    );
     setSaving(false);
-    if (error) return setError(error.message);
-    setCmvRules((rs) => rs.map((r) => (r.id === editingCmv ? (data as CmvRule) : r)));
-    cancelEditCmv();
+    if (ok) cancelEditCmv();
   };
   const addCmv = async () => {
     if (!newCmv.category) {
-      setError("Categoria é obrigatória");
+      flash("err", "Categoria é obrigatória");
       return;
     }
     setSaving(true);
-    setError(null);
     const payload: any = {
       organization_id: ORG_ID,
       category: newCmv.category,
@@ -175,22 +206,29 @@ export function RulesClient({
       label: newCmv.label ?? "",
       notes: newCmv.notes ?? null,
     };
-    const { data, error } = await supabase
-      .from("org_cmv_rules")
-      .insert(payload)
-      .select()
-      .single();
-    setSaving(false);
-    if (error) return setError(error.message);
-    setCmvRules((rs) =>
-      [...rs, data as CmvRule].sort((a, b) => {
-        const c = a.category.localeCompare(b.category);
-        if (c !== 0) return c;
-        return (a.subcategory ?? "").localeCompare(b.subcategory ?? "");
-      })
+    const ok = await runSave<CmvRule>(
+      "nova regra CMV",
+      () =>
+        supabase
+          .from("org_cmv_rules")
+          .insert(payload)
+          .select()
+          .single() as any,
+      (data) => {
+        setCmvRules((rs) =>
+          [...rs, data as CmvRule].sort((a, b) => {
+            const c = a.category.localeCompare(b.category);
+            if (c !== 0) return c;
+            return (a.subcategory ?? "").localeCompare(b.subcategory ?? "");
+          })
+        );
+      }
     );
-    setAddingCmv(false);
-    setNewCmv({ category: "Food", subcategory: null, is_cmv: true, label: "", notes: "" });
+    setSaving(false);
+    if (ok) {
+      setAddingCmv(false);
+      setNewCmv({ category: "Food", subcategory: null, is_cmv: true, label: "", notes: "" });
+    }
   };
   const removeCmv = async (id: number) => {
     if (!confirm("Remover esta regra?")) return;
@@ -205,6 +243,32 @@ export function RulesClient({
         <div className="tg-mono text-[11px] uppercase tracking-wider border border-tango-red text-tango-red px-4 py-3">
           {error}
         </div>
+      )}
+      {saveStatus && (
+        <div
+          className={
+            "sticky top-0 z-30 tg-mono text-[11px] uppercase tracking-wider border px-4 py-3 flex items-center justify-between " +
+            (saveStatus.type === "ok"
+              ? "border-tango-yellow text-tango-yellow bg-tango-yellow/10"
+              : "border-tango-red text-tango-red bg-tango-red/10")
+          }
+        >
+          <span>{saveStatus.msg}</span>
+          <button
+            onClick={() => setSaveStatus(null)}
+            className="hover:text-tango-white p-1"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+      {openItemsModal && (
+        <SupplierItemsModal
+          supplierId={openItemsModal.id}
+          supplierName={openItemsModal.name}
+          organizationId={ORG_ID}
+          onClose={() => setOpenItemsModal(null)}
+        />
       )}
 
       {/* ============ SUPPLIER RULES ============ */}
@@ -303,16 +367,34 @@ export function RulesClient({
                       <CmvModeCell
                         rule={r as any}
                         onChange={async (mode) => {
-                          const { data, error } = await supabase
-                            .from("org_supplier_rules")
-                            .update({ cmv_mode: mode, updated_at: new Date().toISOString() })
-                            .eq("id", r.id)
-                            .select()
-                            .single();
-                          if (error) return setError(error.message);
-                          setSupplierRules((rs) =>
-                            rs.map((x) => (x.id === r.id ? (data as SupplierRule) : x))
+                          const ok = await runSave<SupplierRule>(
+                            `CMV mode do ${r.supplier_name}`,
+                            () =>
+                              supabase
+                                .from("org_supplier_rules")
+                                .update({ cmv_mode: mode, updated_at: new Date().toISOString() })
+                                .eq("id", r.id)
+                                .select()
+                                .single() as any,
+                            (data) => {
+                              setSupplierRules((rs) =>
+                                rs.map((x) => (x.id === r.id ? (data as SupplierRule) : x))
+                              );
+                            }
                           );
+                          // Se marcou EDITAR e salvou ok, abre modal item-a-item
+                          if (ok && mode === "edit") {
+                            const sup = await supabase
+                              .from("suppliers")
+                              .select("id")
+                              .eq("name", r.supplier_name)
+                              .maybeSingle();
+                            if (sup.data?.id) {
+                              setOpenItemsModal({ id: sup.data.id, name: r.supplier_name });
+                            } else {
+                              flash("err", `Fornecedor ${r.supplier_name} não achado em suppliers.`);
+                            }
+                          }
                         }}
                       />
                     </Td>
@@ -475,10 +557,32 @@ export function RulesClient({
                     <Td className="text-center">
                       {isEditing ? (
                         <input type="checkbox" checked={draftCmv.is_cmv ?? false} onChange={(e) => setDraftCmv({ ...draftCmv, is_cmv: e.target.checked })} className="w-4 h-4 accent-tango-yellow" />
-                      ) : r.is_cmv ? (
-                        <span className="tg-mono text-[10px] uppercase tracking-widest text-tango-yellow border border-tango-yellow px-2 py-0.5">SIM</span>
                       ) : (
-                        <span className="tg-mono text-[10px] uppercase tracking-widest text-tango-muted border border-tango-border px-2 py-0.5">NÃO</span>
+                        <button
+                          onClick={async () => {
+                            const next = !r.is_cmv;
+                            await runSave<CmvRule>(
+                              `regra ${r.category}${r.subcategory ? "/" + r.subcategory : ""}`,
+                              () =>
+                                supabase
+                                  .from("org_cmv_rules")
+                                  .update({ is_cmv: next })
+                                  .eq("id", r.id)
+                                  .select()
+                                  .single() as any,
+                              (data) => setCmvRules((rs) => rs.map((x) => (x.id === r.id ? (data as CmvRule) : x)))
+                            );
+                          }}
+                          title="Clique pra alternar CMV / NÃO CMV"
+                          className={
+                            "tg-mono text-[10px] uppercase tracking-widest border px-2 py-0.5 transition-colors " +
+                            (r.is_cmv
+                              ? "text-tango-yellow border-tango-yellow hover:bg-tango-yellow/10"
+                              : "text-tango-muted border-tango-border hover:text-tango-white hover:border-tango-white")
+                          }
+                        >
+                          {r.is_cmv ? "SIM" : "NÃO"}
+                        </button>
                       )}
                     </Td>
                     <Td>
