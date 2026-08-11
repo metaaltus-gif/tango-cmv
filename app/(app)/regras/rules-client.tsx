@@ -276,6 +276,7 @@ export function RulesClient({
             <thead>
               <tr className="border-b border-tango-border">
                 <Th>FORNECEDOR</Th>
+                <Th>CMV</Th>
                 <Th>MODO</Th>
                 <Th>RESTRIÇÃO</Th>
                 <Th>PAGAMENTO</Th>
@@ -297,6 +298,23 @@ export function RulesClient({
                           {r.supplier_name.replace(/_/g, " ")}
                         </span>
                       </div>
+                    </Td>
+                    <Td>
+                      <CmvModeCell
+                        rule={r as any}
+                        onChange={async (mode) => {
+                          const { data, error } = await supabase
+                            .from("org_supplier_rules")
+                            .update({ cmv_mode: mode, updated_at: new Date().toISOString() })
+                            .eq("id", r.id)
+                            .select()
+                            .single();
+                          if (error) return setError(error.message);
+                          setSupplierRules((rs) =>
+                            rs.map((x) => (x.id === r.id ? (data as SupplierRule) : x))
+                          );
+                        }}
+                      />
                     </Td>
                     <Td>
                       {isEditing ? (
@@ -516,4 +534,38 @@ function PaymentChip({ pm }: { pm: string | null }) {
   else if (pm.toUpperCase().includes("ACH")) cls = "text-tango-white border-tango-white";
   else if (pm.toUpperCase().includes("MASTER") || pm.toUpperCase().includes("VISA")) cls = "text-tango-red border-tango-red";
   return (<span className={`tg-mono text-[9px] uppercase tracking-widest border px-2 py-0.5 ${cls}`}>{pm}</span>);
+}
+
+function CmvModeCell({
+  rule,
+  onChange,
+}: {
+  rule: SupplierRule & { cmv_mode?: string };
+  onChange: (mode: string) => void;
+}) {
+  const current = (rule as any).cmv_mode || "edit";
+  const modes: { key: string; label: string; activeCls: string }[] = [
+    { key: "always", label: "SEMPRE", activeCls: "text-tango-yellow border-tango-yellow bg-tango-yellow/10" },
+    { key: "edit",   label: "EDITAR", activeCls: "text-tango-white border-tango-white bg-tango-white/10" },
+    { key: "never",  label: "NUNCA",  activeCls: "text-tango-red border-tango-red bg-tango-red/10" },
+  ];
+  return (
+    <div className="flex gap-1">
+      {modes.map((m) => (
+        <button
+          key={m.key}
+          onClick={() => onChange(m.key)}
+          className={
+            "tg-mono text-[9px] uppercase tracking-widest border px-2 py-0.5 transition-colors " +
+            (current === m.key
+              ? m.activeCls
+              : "text-tango-muted border-tango-border hover:border-tango-white hover:text-tango-white")
+          }
+          title={`Mudar para ${m.label}`}
+        >
+          {m.label}
+        </button>
+      ))}
+    </div>
+  );
 }
